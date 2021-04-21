@@ -1,0 +1,5 @@
+<Simulation version="4.2.3">
+   <XMLScript Type="XMLScript">Simulation/CD8TcellProject.xml</XMLScript>
+   <PythonScript Type="PythonScript">Simulation/CD8TcellProject.py</PythonScript>
+   <Resource Type="Python">Simulation/CD8TcellProjectSteppables.py</Resource>
+</Simulation>
