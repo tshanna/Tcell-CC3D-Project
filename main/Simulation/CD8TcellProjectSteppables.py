@@ -17,9 +17,11 @@ class CD8TcellProjectSteppable(SteppableBasePy):
 
         SteppableBasePy.__init__(self,frequency)
         
-        self.init_pop = 33
+        self.did_seeding = False
 
     def start(self):
+        
+        self.pop_selected = False
         
         
         self.plot_win = self.add_new_plot_window(title='ODE Values',
@@ -64,16 +66,22 @@ class CD8TcellProjectSteppable(SteppableBasePy):
         self.plot_win4.add_plot(plot_name='E',style='Lines', color='purple',size=4)
         self.plot_win4.add_plot(plot_name='P',style='Lines', color='green',size=4)
         self.plot_win4.add_plot(plot_name='T',style='Lines', color='blue',size=4)
+        
 
     def add_steering_panel(self):
-        self.add_steering_param(name='Initial_Cell_Population', val=33, min_val=4, max_val=100, widget_name='slider')
+        self.add_steering_param(name='Initial_Cell_Population', val=4, min_val=4, max_val=100, widget_name='slider')
         
     def process_steering_panel_data(self):
         pop_cells = self.get_steering_param('Initial_Cell_Population')
 
-        self.init_pop = pop_cells
+        if not self.did_seeding:
+            self.did_seeding = True
+            self.populate_cells(pop_cells)
+        # self.init_pop = pop_cells
+        
+        # self.pop_selected = True
 
-    def populate_cells(self):
+    def populate_cells(self, pop_num):
         
         model_string = """
         
@@ -139,7 +147,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
         
         #initialize cells throughout the domain
         i = 0
-        while i < self.init_pop:
+        while i < pop_num:
             x1 = random.sample(range(0,201),1)
             x = x1[0]
             y1 = random.sample(range(0,201),1)
@@ -187,21 +195,25 @@ class CD8TcellProjectSteppable(SteppableBasePy):
     def step(self,mcs):
         
         if mcs == 0:
-            self.populate_cells()
+            while not self.pop_selected:
+                if self.steering_param_dirty():
+                    break 
+                pass
+            #self.populate_cells()
         
-        if not self.cellOI:
-            for cell in self.cell_list_by_type(self.PREACTIVATED):
-                if cell.sbml.dp['fAPC'] > 0:
-                    self.cellOI = cell
-                    break   
+        # if not self.cellOI:
+            # for cell in self.cell_list_by_type(self.PREACTIVATED):
+                # if cell.sbml.dp['fAPC'] > 0:
+                    # self.cellOI = cell
+                    # break   
             
-        if not mcs % 10:
-            for cell in self.cell_list:
-                if self.cellOI:
-                    self.plot_win.add_data_point("IRa", mcs, self.cellOI.sbml.dp['IRa'])
-                    self.plot_win.add_data_point("Tb", mcs, self.cellOI.sbml.dp['Tb']) 
-                    #self.plot_win.add_data_point("fAPC", mcs, self.cellOI.sbml.dp['fAPC'])
-                    self.plot_win.add_data_point("Casp", mcs, self.cellOI.sbml.dp['C'])
+        # if not mcs % 10:
+            # for cell in self.cell_list:
+                # if self.cellOI:
+                    # self.plot_win.add_data_point("IRa", mcs, self.cellOI.sbml.dp['IRa'])
+                    # self.plot_win.add_data_point("Tb", mcs, self.cellOI.sbml.dp['Tb']) 
+                    # self.plot_win.add_data_point("fAPC", mcs, self.cellOI.sbml.dp['fAPC'])
+                    # self.plot_win.add_data_point("Casp", mcs, self.cellOI.sbml.dp['C'])
             # for cell in self.cell_list_by_type(self.ACTIVATED):
                 # if self.cellOI:
                     # self.plot_win2.add_data_point("Tb", mcs, self.cellOI.sbml.dp['Tb']) 
