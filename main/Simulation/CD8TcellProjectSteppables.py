@@ -18,6 +18,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
         SteppableBasePy.__init__(self,frequency)
         
         self.did_seeding = False
+        self.did_seeding_again = False
 
     def start(self):
         
@@ -69,18 +70,31 @@ class CD8TcellProjectSteppable(SteppableBasePy):
         
 
     def add_steering_panel(self):
-        self.add_steering_param(name='Initial_Cell_Population', val=4, min_val=4, max_val=100, widget_name='slider')
+        self.add_steering_param(name='Initial Cell Population', val=33, min_val=4, max_val=100, widget_name='slider')
+        # self.add_steering_param(name='Initial APC Population', val=3, min_val=1, max_val=10, widget_name='slider')
+        self.add_steering_param(name='lamc1: caspase feedback strength', val=0.01, min_val=0.0, max_val=0.03, decimal_precision=3, widget_name='slider')
+        self.add_steering_param(name='lamT3: Tbet feedback strength', val= 0.01, min_val=0.01, max_val=1.5, decimal_precision=2, widget_name='slider')
         
     def process_steering_panel_data(self):
-        pop_cells = self.get_steering_param('Initial_Cell_Population')
-
-        if not self.did_seeding:
-            self.did_seeding = True
-            self.populate_cells(pop_cells)
-        # self.init_pop = pop_cells
         
-        # self.pop_selected = True
+        # while not self.did_seeding:
+            # pop_cells = self.get_steering_param('Initial Cell Population')
+            # apc_cells = self.get_steering_param('Initial APC Population')
+            # self.did_seeding = True
+            # pass
+            
+        pop_cells = self.get_steering_param('Initial Cell Population')
+        
+        if not self.did_seeding_again:
+            self.did_seeding_again = True
+            # self.populate_cells(pop_cells, apc_cells)
+            self.populate_cells(pop_cells)
+        
+        for cell in self.cell_list_by_type(self.NAIVE, self.PREACTIVATED, self.ACTIVATED, self.EFFECTOR):
+            cell.sbml.dp['lamc1'] = self.get_steering_param('lamc1: caspase feedback strength')
+            cell.sbml.dp['lamT3'] = self.get_steering_param('lamT3: Tbet feedback strength')
 
+    # def populate_cells(self, pop_num, apc_num):
     def populate_cells(self, pop_num):
         
         model_string = """
@@ -160,7 +174,9 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 self.cell_field[x, y, z] = cell
                 i += 1
         
-        L = [3,11,20]
+        L = random.sample(range(0, pop_num), 3)
+        # L = random.sample(range(0, pop_num), apc_num)
+        
         self.cellOI = None
         
         for cell in self.cell_list:
@@ -199,8 +215,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 if self.steering_param_dirty():
                     break 
                 pass
-            #self.populate_cells()
-        
+
         # if not self.cellOI:
             # for cell in self.cell_list_by_type(self.PREACTIVATED):
                 # if cell.sbml.dp['fAPC'] > 0:
@@ -212,8 +227,8 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 # if self.cellOI:
                     # self.plot_win.add_data_point("IRa", mcs, self.cellOI.sbml.dp['IRa'])
                     # self.plot_win.add_data_point("Tb", mcs, self.cellOI.sbml.dp['Tb']) 
-                    # self.plot_win.add_data_point("fAPC", mcs, self.cellOI.sbml.dp['fAPC'])
                     # self.plot_win.add_data_point("Casp", mcs, self.cellOI.sbml.dp['C'])
+                    # self.plot_win.add_data_point("fAPC", mcs, self.cellOI.sbml.dp['fAPC'])
             # for cell in self.cell_list_by_type(self.ACTIVATED):
                 # if self.cellOI:
                     # self.plot_win2.add_data_point("Tb", mcs, self.cellOI.sbml.dp['Tb']) 
@@ -291,7 +306,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 
                 cell.targetVolume = 0.0
         
-        for cell in self.cell_list_by_type(self.NAIVE, self.EFFECTOR, self.PREACTIVATED, self.ACTIVATED):
+        for cell in self.cell_list_by_type(self.NAIVE, self.PREACTIVATED, self.ACTIVATED, self.EFFECTOR):
             
             if cell.targetVolume > 0.0:
                 
@@ -338,6 +353,9 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 cell.sbml.dp['fAPC'] = fAPC
                 cell.sbml.dp['Tbcm'] = Tbcm    
                 
+                print("lamc1 VALUE IS NOW: ", cell.sbml.dp['lamc1'])
+                print("lamT3 VALUE IS NOW: ", cell.sbml.dp['lamT3'])
+                
                 # second term PDE
                 #secrete = ( cell.dict['lamR3']*(( cell.sbml.dp['IRa'] )/( lamR4 + cell.sbml.dp['IRa'] + small_num)) + lam1 * cell.sbml.dp['fAPC'] ) * ( 1 / (1 + lamT4 * cell.sbml.dp['Tb']) )/(cell.surface)
                 secrete = lam1*cell.sbml.dp['fAPC']
@@ -356,7 +374,6 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 # if Tbet threshold reached, A -> E
                 if cell.type == self.ACTIVATED:
                     if cell.sbml.dp['Tb'] > 40:
-                        # print("Tbet VALUE AT 3000 MCS: ", cell.sbml.dp['Tb'])
                         cell.type = self.EFFECTOR
                 
                 # Preactivated cells stop moving until activated
