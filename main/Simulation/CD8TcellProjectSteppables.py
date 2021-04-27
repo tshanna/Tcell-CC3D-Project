@@ -1,5 +1,7 @@
 
 # TODO: Modularize plots
+# TOFIX: Simulation will crash if cellOI dies during the simulation. 
+#        cellOI is used for plotting purposes
 
 from cc3d.core.PySteppables import *
 import numpy as np
@@ -29,7 +31,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
     def start(self):
         
         self.plot_win = self.add_new_plot_window(title='Intracellular ODE Values',
-                                                 x_axis_title='Days',
+                                                 x_axis_title='Hours',
                                                  y_axis_title='Amount', x_scale_type='linear', y_scale_type='linear',
                                                  grid=False,config_options={'legend': True})
         
@@ -46,7 +48,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                                                  # grid=False,config_options={'legend': True})                                              
         
         self.plot_win4 = self.add_new_plot_window(title='Cell Count',
-                                                 x_axis_title='Days',
+                                                 x_axis_title='Days post infection',
                                                  y_axis_title='Number of Cells', x_scale_type='linear', y_scale_type='linear',
                                                  grid=False,config_options={'legend': True}) 
      
@@ -227,9 +229,10 @@ class CD8TcellProjectSteppable(SteppableBasePy):
         if not mcs % 10:
             for cell in self.cell_list:
                 if self.cellOI:
-                    self.plot_win.add_data_point("IRa", mcs/1440, self.cellOI.sbml.dp['IRa'])
-                    self.plot_win.add_data_point("Tb", mcs/1440, self.cellOI.sbml.dp['Tb']) 
-                    self.plot_win.add_data_point("Casp", mcs/1440, self.cellOI.sbml.dp['C'])
+                    self.plot_win.add_data_point("IRa", mcs/60, self.cellOI.sbml.dp['IRa'])
+                    self.plot_win.add_data_point("Tb", mcs/60, self.cellOI.sbml.dp['Tb']) 
+                    self.plot_win.add_data_point("Casp", mcs/60, self.cellOI.sbml.dp['C'])
+                    
                     # self.plot_win.add_data_point("fAPC", mcs, self.cellOI.sbml.dp['fAPC'])
             # for cell in self.cell_list_by_type(self.ACTIVATED):
                 # if self.cellOI:
@@ -263,12 +266,12 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                     # self.cellOI = None
         
         if not mcs % 10 :
-            self.plot_win4.add_data_point("N", mcs/1440, len(self.cell_list_by_type(self.NAIVE)))
-            self.plot_win4.add_data_point("P", mcs/1440, len(self.cell_list_by_type(self.PREACTIVATED)))
-            self.plot_win4.add_data_point("A", mcs/1440, len(self.cell_list_by_type(self.ACTIVATED)))
-            self.plot_win4.add_data_point("E", mcs/1440, len(self.cell_list_by_type(self.EFFECTOR)))
-            self.plot_win4.add_data_point("APC", mcs/1440, len(self.cell_list_by_type(self.APC)))
-            self.plot_win4.add_data_point("T", mcs/1440, len(self.cell_list))
+            self.plot_win4.add_data_point("N", (mcs/1440)+3, len(self.cell_list_by_type(self.NAIVE)))
+            self.plot_win4.add_data_point("P", (mcs/1440)+3, len(self.cell_list_by_type(self.PREACTIVATED)))
+            self.plot_win4.add_data_point("A", (mcs/1440)+3, len(self.cell_list_by_type(self.ACTIVATED)))
+            self.plot_win4.add_data_point("E", (mcs/1440)+3, len(self.cell_list_by_type(self.EFFECTOR)))
+            self.plot_win4.add_data_point("APC", (mcs/1440)+3, len(self.cell_list_by_type(self.APC)))
+            self.plot_win4.add_data_point("T", (mcs/1440)+3, len(self.cell_list))
             
         IL2_secretor = self.get_field_secretor('IL2')
         
