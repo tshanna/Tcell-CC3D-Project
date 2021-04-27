@@ -355,8 +355,8 @@ class CD8TcellProjectSteppable(SteppableBasePy):
                 cell.sbml.dp['fAPC'] = fAPC
                 cell.sbml.dp['Tbcm'] = Tbcm    
                 
-                print("lamc1 VALUE IS NOW: ", cell.sbml.dp['lamc1'])
-                print("lamT3 VALUE IS NOW: ", cell.sbml.dp['lamT3'])
+                # print("lamc1 VALUE IS NOW: ", cell.sbml.dp['lamc1'])
+                # print("lamT3 VALUE IS NOW: ", cell.sbml.dp['lamT3'])
                 
                 # second term PDE
                 #secrete = ( cell.dict['lamR3']*(( cell.sbml.dp['IRa'] )/( lamR4 + cell.sbml.dp['IRa'] + small_num)) + lam1 * cell.sbml.dp['fAPC'] ) * ( 1 / (1 + lamT4 * cell.sbml.dp['Tb']) )/(cell.surface)
