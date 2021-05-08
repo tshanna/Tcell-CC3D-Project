@@ -76,7 +76,7 @@ class CD8TcellProjectSteppable(SteppableBasePy):
 
     def add_steering_panel(self):
         
-        self.add_steering_param(name='Start', val=0, min_val=0, max_val=1, widget_name='slider', decimal_precision=0)
+        self.add_steering_param(name='Start', val=0, widget_name='combobox', enum=[0,1])
 
         self.add_steering_param(name='Initial Cell Population', val=33, min_val=4, max_val=100, widget_name='slider')
         self.add_steering_param(name='Initial APC Population', val=3, min_val=1, max_val=10, widget_name='slider')
